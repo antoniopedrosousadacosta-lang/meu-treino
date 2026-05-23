@@ -5,8 +5,8 @@ import json
 st.set_page_config(
     page_title="IRON PROTOCOL",
     page_icon="⚡",
-    layout="wide",
-    initial_sidebar_state="expanded",
+    layout="centered",
+    initial_sidebar_state="collapsed",
 )
 
 # ─── DARK MODE CSS ──────────────────────────────────────────────────────────
@@ -168,17 +168,28 @@ html, body, [data-testid="stAppViewContainer"] {
     margin-top: 4px;
 }
 
-/* SIDEBAR BUTTONS */
-div[data-testid="stSidebar"] button {
-    background: #0d0d1a !important;
+/* DAY SELECTOR */
+div[data-testid="stSelectbox"] > div > div {
+    background: #111118 !important;
+    border: 1px solid #ff3d0066 !important;
+    border-radius: 6px !important;
+    color: #ff8c00 !important;
+    font-family: 'Bebas Neue', cursive !important;
+    font-size: 1.1rem !important;
+    letter-spacing: 0.1em !important;
+}
+/* RESET BUTTONS */
+div[data-testid="stColumns"] button {
+    background: #111118 !important;
     border: 1px solid #ff3d0066 !important;
     color: #ff3d00 !important;
     font-family: 'Rajdhani', sans-serif !important;
     font-weight: 700 !important;
     letter-spacing: 0.1em !important;
-    width: 100%;
+    border-radius: 4px !important;
+    width: 100% !important;
 }
-div[data-testid="stSidebar"] button:hover {
+div[data-testid="stColumns"] button:hover {
     border-color: #ffd700 !important;
     color: #ffd700 !important;
 }
@@ -617,64 +628,49 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ─── SIDEBAR ─────────────────────────────────────────────────────────────────
-with st.sidebar:
-    st.markdown("""
-    <div style='font-family: Bebas Neue, cursive; font-size: 1.3rem; color: #ff3d00;
-                letter-spacing: 0.15em; margin-bottom: 16px; border-bottom: 1px solid #ff3d0033; padding-bottom: 8px;'>
-        NAVEGAÇÃO
-    </div>
-    """, unsafe_allow_html=True)
+# ─── DAY SELECTOR (inline — mobile friendly) ─────────────────────────────────
+dias = list(TRAINING_PLAN.keys())
+selected_day = st.selectbox(
+    "Selecionar dia:",
+    options=dias,
+    label_visibility="collapsed",
+)
 
-    dias = list(TRAINING_PLAN.keys())
-    selected_day = st.radio(
-        "Selecionar Dia:",
-        options=dias,
-        format_func=lambda x: x,
-        label_visibility="collapsed",
-    )
+# Progress bar
+total_ex = sum(
+    len(b["exercicios"])
+    for d in TRAINING_PLAN.values()
+    for b in d["blocos"]
+)
+done_ex = len([v for v in st.session_state.checks.values() if v])
+pct = int((done_ex / total_ex) * 100) if total_ex > 0 else 0
 
-    st.markdown("<br>", unsafe_allow_html=True)
+st.markdown(f"""
+<div style='display:flex; justify-content:space-between; align-items:center; margin: 6px 0 2px 0;'>
+    <span style='font-family: Share Tech Mono, monospace; font-size: 0.65rem; color: #606080;'>
+        PROGRESSO SEMANAL — {done_ex}/{total_ex} exercícios
+    </span>
+    <span style='font-family: Bebas Neue, cursive; font-size: 1.1rem; color: #ff8c00;'>{pct}%</span>
+</div>
+<div style='background: #1e1e2e; border-radius: 2px; height: 5px; margin-bottom: 12px;'>
+    <div style='background: linear-gradient(90deg, #ff3d00, #ffd700);
+                height: 5px; border-radius: 2px; width: {pct}%;'></div>
+</div>
+""", unsafe_allow_html=True)
 
-    if st.button("🔄  RESETAR DIA", use_container_width=True):
+col_r1, col_r2 = st.columns(2)
+with col_r1:
+    if st.button("🔄 Resetar Dia", use_container_width=True):
         keys_to_del = [k for k in st.session_state.checks if k.startswith(selected_day)]
         for k in keys_to_del:
             del st.session_state.checks[k]
-        st.toast(f"Treino do dia resetado!", icon="✅")
-
-    if st.button("🗑️  RESETAR SEMANA", use_container_width=True):
+        st.toast("Treino do dia resetado!", icon="✅")
+with col_r2:
+    if st.button("🗑️ Resetar Semana", use_container_width=True):
         st.session_state.checks = {}
         st.toast("Semana completa resetada!", icon="♻️")
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # Progress sidebar
-    total_ex = sum(
-        len(b["exercicios"])
-        for d in TRAINING_PLAN.values()
-        for b in d["blocos"]
-    )
-    done_ex = len([v for v in st.session_state.checks.values() if v])
-    pct = int((done_ex / total_ex) * 100) if total_ex > 0 else 0
-
-    st.markdown(f"""
-    <div style='font-family: Share Tech Mono, monospace; font-size: 0.7rem;
-                color: #9090b0; letter-spacing: 0.1em; margin-bottom: 6px;'>
-        PROGRESSO SEMANAL
-    </div>
-    <div style='font-family: Bebas Neue, cursive; font-size: 2rem; color: #ff8c00;
-                line-height: 1;'>
-        {pct}%
-    </div>
-    <div style='background: #1e1e2e; border-radius: 2px; height: 6px; margin-top: 6px;'>
-        <div style='background: linear-gradient(90deg, #ff3d00, #ffd700);
-                    height: 6px; border-radius: 2px; width: {pct}%;'></div>
-    </div>
-    <div style='font-family: Share Tech Mono, monospace; font-size: 0.65rem;
-                color: #606080; margin-top: 4px;'>
-        {done_ex}/{total_ex} EXERCÍCIOS
-    </div>
-    """, unsafe_allow_html=True)
+st.markdown("<hr style='border-color: #1e1e2e; margin: 14px 0;'>", unsafe_allow_html=True)
 
 # ─── MAIN CONTENT ─────────────────────────────────────────────────────────────
 day_data = TRAINING_PLAN[selected_day]
