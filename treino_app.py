@@ -1115,28 +1115,34 @@ with tab_ex:
 
             # histórico resumido (última entrada)
             hist = get_log(key)
-            last_str = ""
+            last_html = ""
             if hist:
                 h = hist[0]
-                last_str = f"Último: <b>{h['kg']} kg × {h['reps']} reps</b> ({h['date']})"
-                if h["is_pr"]: last_str += " 🏆"
+                pr_icon = " 🏆" if h["is_pr"] else ""
+                last_html = (
+                    "<div style='font-size:0.75rem;color:#6B7280;margin-bottom:6px;'>"
+                    "Último: <b>" + str(h['kg']) + " kg × " + str(h['reps']) + " reps</b>"
+                    " (" + h['date'] + ")" + pr_icon +
+                    "</div>"
+                )
 
-            st.markdown(f"""
-            <div class="ex-wrap {done_cls}">
-                <div class="ex-top">
-                    <div class="ex-name">{check_icon} {ex['nome']}</div>
-                    <div class="ex-sets-pill">{ex['series']}</div>
-                </div>
-                <div class="badges-row">{badges}</div>
-                <div class="ex-desc">{ex['desc']}</div>
-                {"<div style='font-size:0.75rem;color:#6B7280;margin-bottom:6px;'>" + last_str + "</div>" if last_str else ""}
-                <div class="alt-pill">
-                    <div class="alt-lbl">🔄 Academia cheia</div>
-                    <div class="alt-txt">{ex['alt']}</div>
-                </div>
-                <a class="yt-link" href="{ex['gif']}" target="_blank">🎬 Ver no YouTube ↗</a>
-            </div>
-            """, unsafe_allow_html=True)
+            card_html = (
+                "<div class='ex-wrap " + done_cls + "'>"
+                "<div class='ex-top'>"
+                "<div class='ex-name'>" + check_icon + " " + ex['nome'] + "</div>"
+                "<div class='ex-sets-pill'>" + ex['series'] + "</div>"
+                "</div>"
+                "<div class='badges-row'>" + badges + "</div>"
+                "<div class='ex-desc'>" + ex['desc'] + "</div>"
+                + last_html +
+                "<div class='alt-pill'>"
+                "<div class='alt-lbl'>🔄 Academia cheia</div>"
+                "<div class='alt-txt'>" + ex['alt'] + "</div>"
+                "</div>"
+                "<a class='yt-link' href='" + ex['gif'] + "' target='_blank'>🎬 Ver no YouTube ↗</a>"
+                "</div>"
+            )
+            st.markdown(card_html, unsafe_allow_html=True)
 
             # log inline
             with st.expander(f"📝 Registrar {ex['nome']}", expanded=False):
